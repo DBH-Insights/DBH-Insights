@@ -1,0 +1,15 @@
+{
+  "name": "dbh-insights-helper",
+  "private": true,
+  "version": "0.3.0",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "icons": "tauri icon icon-source.png",
+    "build:mac": "CARGO_TARGET_DIR=\"$HOME/Library/Caches/dbh-insights-helper-build\" tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

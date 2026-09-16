@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DBH Insights Helper</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>DBH Insights Helper</h1>
+      <p class="sub">Runs in the background so the DBH Insights website can reach your vCenters. Passwords stay on this machine, in the OS keychain.</p>
+      <div id="server" class="pill">Checking…</div>
+    </header>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>vCenters</h2>
+        <button type="button" id="addVcenter" class="primary">Add vCenter</button>
+      </div>
+      <ul id="vcenterList" class="vc-list"></ul>
+      <p id="emptyList" class="hint" hidden>No vCenters yet. Click “Add vCenter” to get started.</p>
+    </section>
+
+    <form id="editor" class="card" autocomplete="off" hidden>
+      <h2 id="editorTitle">Add vCenter</h2>
+      <label>Display name
+        <input id="vcName" placeholder="Optional, defaults to the address" spellcheck="false">
+      </label>
+      <label>Address
+        <input id="vcHost" placeholder="vcenter.lab.local" required spellcheck="false">
+      </label>
+      <label>Username
+        <input id="vcUser" placeholder="administrator@vsphere.local" required spellcheck="false">
+      </label>
+      <label>Password
+        <input id="vcPassword" type="password">
+      </label>
+      <label class="check">
+        <input id="vcInsecure" type="checkbox">
+        Accept self-signed certificates
+      </label>
+      <div class="actions">
+        <button type="submit" class="primary">Save</button>
+        <button type="button" id="editorTest">Save &amp; test</button>
+        <button type="button" id="editorCancel">Cancel</button>
+      </div>
+      <p id="editorMessage" class="msg" role="status"></p>
+    </form>
+
+    <form id="general" class="card" autocomplete="off">
+      <h2>Helper settings</h2>
+      <label>Websites allowed to use this helper (one per line, e.g. https://insights.example.com)
+        <textarea id="allowedOrigins" rows="3" spellcheck="false"></textarea>
+      </label>
+      <label class="check">
+        <input id="allowLocalFiles" type="checkbox">
+        Allow the website when opened from a local file (file://)
+      </label>
+      <p class="hint">A page opened from a file has no web address; browsers send it as <code>null</code>, the same label any website can give a hidden sandboxed frame. While this is on, such a page could use this helper. Turn it on only while you need it, or run a local web server instead.</p>
+      <label>Local port
+        <input id="port" type="number" min="1024" max="65535" required>
+      </label>
+      <p id="portHint" class="hint" hidden>The website looks for the helper on port 8765. After changing the port, open <strong>Helper connection</strong> on the website and enter the new address.</p>
+      <div class="actions">
+        <button type="submit" class="primary">Save settings</button>
+      </div>
+      <p id="generalMessage" class="msg" role="status"></p>
+    </form>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>

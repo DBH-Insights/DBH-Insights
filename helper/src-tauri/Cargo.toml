@@ -1,0 +1,22 @@
+[package]
+name = "dbh-insights-helper"
+version = "0.3.0"
+description = "Local pass-through that lets the DBH Insights website talk to vCenter"
+edition = "2021"
+
+[lib]
+name = "dbh_insights_helper_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["sync", "net", "time", "macros", "rt-multi-thread"] }
+axum = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
+quick-xml = "0.37"

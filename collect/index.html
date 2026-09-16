@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DBH Insights</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span class="brand-text">
+          <strong>DBH Insights</strong>
+          <small>vCenter inventory</small>
+        </span>
+      </div>
+      <nav id="nav" class="nav" aria-label="Views"></nav>
+      <div class="sidebar-footer">
+        <button id="export" class="primary">Export XLSX</button>
+        <button id="helperSettings" class="ghost">Helper connection</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div class="titles">
+          <h1 id="title">Insights</h1>
+          <p id="status" class="status"></p>
+        </div>
+        <div class="actions">
+          <span id="connection" class="conn">Looking for helper…</span>
+          <select id="vcenterSelect" aria-label="vCenter" hidden></select>
+          <input id="filter" type="search" placeholder="Filter rows…" autocomplete="off" aria-label="Filter rows">
+          <button id="downloadHtml" class="ghost" hidden>Download HTML</button>
+          <button id="refresh" class="primary">Refresh</button>
+        </div>
+      </header>
+
+      <div id="notice" class="notice" hidden></div>
+      <div id="warnings" class="warnings" hidden></div>
+
+      <div id="dashboard" class="dashboard" hidden></div>
+
+      <section id="topologyView" class="topology-view" hidden>
+        <!-- Scripts are disabled inside the frame; app.js attaches the hover behaviour from outside. -->
+        <iframe id="topologyFrame" title="Host and storage topology" sandbox="allow-same-origin"></iframe>
+      </section>
+
+      <section id="impactView" class="impact" hidden>
+        <div class="impact-controls">
+          <label class="impact-pick" for="impactSearch">If this fails…</label>
+          <div class="combo">
+            <input id="impactSearch" type="text" role="combobox" aria-expanded="false" aria-controls="impactList"
+                   aria-autocomplete="list" aria-label="Host or datastore to assess" autocomplete="off" spellcheck="false"
+                   placeholder="Search hosts and datastores…">
+            <ul id="impactList" class="combo-list" role="listbox" aria-label="Hosts and datastores" hidden></ul>
+          </div>
+          <p class="hint">Answers from the inventory already loaded: which VMs sit on it, which hosts reach it, and whether the cluster could take the load.</p>
+        </div>
+        <div id="impactResult" class="impact-result"></div>
+      </section>
+
+      <section id="tableView" class="table-view" hidden>
+        <div class="table-wrap">
+          <table>
+            <thead><tr id="headRow"></tr></thead>
+            <tbody id="body"></tbody>
+          </table>
+          <p id="tableEmpty" class="table-empty" hidden></p>
+        </div>
+        <div class="pager">
+          <label class="page-size">Rows per page
+            <select id="pageSize">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="250">250</option>
+              <option value="500">500</option>
+              <option value="0">All</option>
+            </select>
+          </label>
+          <span id="pageRange" class="page-range"></span>
+          <span class="spacer"></span>
+          <button id="pageFirst" class="ghost icon" aria-label="First page" title="First page">«</button>
+          <button id="pagePrev" class="ghost icon" aria-label="Previous page" title="Previous page">‹</button>
+          <span id="pageInfo" class="page-info"></span>
+          <button id="pageNext" class="ghost icon" aria-label="Next page" title="Next page">›</button>
+          <button id="pageLast" class="ghost icon" aria-label="Last page" title="Last page">»</button>
+        </div>
+      </section>
+
+      <section id="explorerView" class="explorer" hidden>
+        <div class="card">
+          <p class="card-title">Send a request through the helper</p>
+          <div class="explorer-row">
+            <select id="explorerVcenter" aria-label="vCenter" hidden></select>
+            <select id="explorerMode" aria-label="API">
+              <option value="GET">REST GET</option>
+              <option value="SOAP">SOAP</option>
+            </select>
+            <input id="explorerPath" value="/api/vcenter/vm" spellcheck="false" aria-label="REST path">
+            <button id="explorerSend" class="primary">Send</button>
+          </div>
+          <textarea id="explorerBody" rows="6" spellcheck="false" aria-label="Request body"></textarea>
+          <p id="explorerHint" class="hint"></p>
+        </div>
+        <pre id="explorerOutput" class="explorer-output"></pre>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="helperDialog">
+    <form method="dialog">
+      <h2>Helper connection</h2>
+      <p class="hint">Where this page finds the DBH Insights Helper running on your computer.</p>
+      <label class="field">Helper URL
+        <input id="helperUrl" type="text" spellcheck="false">
+      </label>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button value="cancel" class="ghost">Cancel</button>
+        <button value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/helper-client.js"></script>
+  <script src="js/vim.js"></script>
+  <script src="js/sheets.js"></script>
+  <script src="js/insights.js"></script>
+  <script src="js/impact.js"></script>
+  <script src="js/xlsx.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/insights-report.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
