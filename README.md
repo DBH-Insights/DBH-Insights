@@ -125,6 +125,16 @@ npm run build
 
 Output goes to `helper/src-tauri/target/release/bundle/`: `.dmg`/`.app` on macOS, `.msi`/`.exe` on Windows, `.deb`/`.rpm`/`.AppImage` on Linux. Tauri can't cross-compile installers, so build on each OS, or use a GitHub Actions matrix with [`tauri-apps/tauri-action`](https://github.com/tauri-apps/tauri-action). Unsigned builds will trigger Gatekeeper/SmartScreen warnings; sign them before handing them out widely.
 
+### Build the Windows app
+
+[`helper/BUILD-WINDOWS.md`](helper/BUILD-WINDOWS.md) walks a fresh Windows Server from nothing to `dbh-insights-helper.exe` and a setup installer, with every step as a PowerShell block to paste. In short, once the C++ build tools, Rust, Node.js and Git are installed:
+
+```powershell
+cd helper
+npm ci
+npm run build -- --bundles nsis
+```
+
 ### Build the Mac app
 
 ```bash
