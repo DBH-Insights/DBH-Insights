@@ -12,8 +12,18 @@ A vCenter inventory website that anyone can open, backed by a small helper app e
                                                                         └──────────┘
 ```
 
-- **`collect/`**: the website — a folder in this repository, not a part of any URL. Its *contents* are what you publish; the live site serves them at its root. Plain HTML/JS, no build step. Every vCenter query is defined here, so new sheets, columns, and layouts ship by redeploying the site.
+- **`collect/`**: the website — a landing page at `index.html` and the app itself in `app/`. It's a folder in this repository, not a part of any URL: its *contents* are what you publish, and the live site serves them at its root (`https://dbh-insights.github.io/` for the landing page, `…/app/` for the app). Plain HTML/JS, no build step. Every vCenter query is defined here, so new sheets, columns, and layouts ship by redeploying the site.
 - **`helper/`**: the desktop helper. It has a settings window where you add, edit, test, and delete any number of vCenters, lives in the system tray, and exposes a pass-through on `127.0.0.1` for vCenter's REST API and read-only SOAP (vim25) queries. It accepts vCenter's self-signed certificate and holds the vCenter sessions. Credentials never reach the website's server.
+
+## What's new in 0.5.0
+
+Totals and rollups — the numbers people always worked out in Excel after an export, now built in. The website changed; the helper didn't, so helper 0.3.0 still works.
+
+- **Totals row on every sheet.** Pinned to the bottom of the table, it covers every page and follows the filter. Amounts are summed, usage percentages averaged, and ratios such as Free %, vCPUs per Core and VMs per Core are worked out from the column totals rather than averaged. Yes/no columns show how many are True. Columns that mean nothing added up — speeds, MTU, VLAN, shares, limits — are left blank.
+- **Group by.** Pick a column — cluster, host, power state, guest OS, VLAN and more — and the sheet becomes one row per value, with a count and totals for each group. Groups sort, filter and page like any sheet, and each sheet remembers its grouping.
+- **Cluster Capacity** (under Overview). One row per cluster: hosts, cores and DRAM against VMs, vCPUs, vRAM and storage, the vCPU-to-core ratio, running vRAM as a share of DRAM, and an N+1 check — could the cluster lose its largest host and still hold its running VMs' memory? It's included in Export XLSX.
+
+Every release is listed on the landing page under **Release notes** (from `collect/js/release-notes.js`).
 
 ## Screenshots
 
@@ -43,7 +53,9 @@ A vCenter inventory website that anyone can open, backed by a small helper app e
 
 ## What the website does
 
+- **Landing page** (`index.html`, the site's default page): what DBH Insights does, a screenshot tour, how the helper fits in, the security model, **helper downloads**, and the **release notes**. Every **Open app** button leads to `app/`.
 - **Insights dashboard:** hosts, cores, storage, VMs, physical memory, the vCPU-to-core ratio, storage utilisation, capacity by datastore type, fullest datastores, and clusters. **Download HTML** saves the dashboard as a self-contained file.
+- **Cluster Capacity** (under Overview): one row per cluster with hosts, cores and DRAM against VMs, vCPUs, vRAM and storage; the vCPU-to-core ratio; running vRAM as a share of DRAM; and an N+1 estimate — could the cluster lose its largest host and still hold its running VMs' assigned memory? Datastore columns count every datastore a cluster's hosts mount, so shared datastores appear under each cluster and aren't totalled.
 - **Sheets:** 27 of them, grouped in the sidebar the way the vSphere inventory is:
 
   | Group | Sheet | Rows | Source |
@@ -77,6 +89,8 @@ A vCenter inventory website that anyone can open, backed by a small helper app e
   | System | vMetaData | what collected the data, when, and from where | SOAP |
 
   Sheets have sorting, filtering, and **paging** with a choice of 5, 10, 25 (the default), 50, 100, 250, 500 or all rows per page.
+
+  Every sheet ends with a **totals row** that follows the filter and covers all pages. Amounts are summed, usage percentages averaged, and ratios (Free %, vCPUs per Core, VMs per Core) recomputed from the column totals; yes/no columns show how many are True. **Group by** turns a sheet into one row per value of a column (cluster, host, power state, guest OS, VLAN…) with a count and the same totals per group, and remembers the choice per sheet.
 - **Multiple vCenters:** choose "All vCenters" or one. Every sheet gets a `VI SDK Server` column, and a vCenter that fails shows a warning while the others still load.
 - **Export XLSX:** every sheet in one workbook (Verdana 9pt, black header row, frozen first row and column, AutoFilter, real dates), in the inventory tool's sheet order. Built in the browser.
 - **Topology tab:** hosts grouped by cluster, datastores, and a line for each host-to-datastore mount (hover to isolate one), plus datastore and host tables. It renders in the page in a sandboxed frame. **Download HTML** saves the same report as a self-contained file for emailing or archiving.
@@ -114,7 +128,7 @@ Where things are stored:
 python3 -m http.server 5500 --bind 127.0.0.1
 ```
 
-Run that from the project root, then open http://localhost:5500/collect/ — the `/collect/` there is just the local folder you're serving from, and the published site has no such path. The helper allows `https://dbh-insights.github.io`, `http://localhost:5500` and `http://127.0.0.1:5500` by default. The website needs helper 0.3.0 or later (for SOAP and performance counters) and says so if an older helper is running.
+Run that from the project root, then open http://localhost:5500/collect/ for the landing page or http://localhost:5500/collect/app/ for the app — the `/collect/` there is just the local folder you're serving from, and the published site has no such path. The helper allows `https://dbh-insights.github.io`, `http://localhost:5500` and `http://127.0.0.1:5500` by default. The website needs helper 0.3.0 or later (for SOAP and performance counters) and says so if an older helper is running.
 
 ## Build installers
 
@@ -173,25 +187,52 @@ npm run icons
 
 ## Deploy the website
 
-Copy the **contents** of `collect/` — `index.html` plus the `css/` and `js/` folders, not `collect/` itself — to wherever you serve from. `collect/` is this repository's source folder; it never has to appear in a URL. The published site lives in the `dbh-insights.github.io` repository, whose root is the web root, so it serves the files at `https://dbh-insights.github.io/` with no `/collect/` in the address, and that origin is allowed by the helper out of the box.
+Copy the **contents** of `collect/` — `index.html` plus the `app/`, `css/`, `js/` and `img/` folders, not `collect/` itself — to wherever you serve from, leaving the site's own `helper-app/` folder of installers in place. Publish them together in one commit: each page names the files it loads, so a page that goes up before its files (or after they're deleted) shows unstyled and does nothing. `collect/` is this repository's source folder; it never has to appear in a URL. The published site lives in the `dbh-insights.github.io` repository, whose root is the web root, so it serves the files at `https://dbh-insights.github.io/` with no `/collect/` in the address, and that origin is allowed by the helper out of the box.
 
 The files are static and reference each other with relative links, so they work equally well one level down — `https://example.com/insights/`, say — as long as you link to the URL with its trailing slash; most servers redirect `/insights` to `/insights/` automatically. Any static host works: GitHub Pages, Netlify, S3, IIS, nginx. If you publish to an origin of your own, each user adds it (for example `https://insights.example.com`, with no trailing path) under **Websites allowed to use this helper**. Until they do, the site shows exactly what to add.
+
+## Helper downloads
+
+The landing page's **Download** section links to installers served by the site itself, from a `helper-app/` folder next to the published pages:
+
+```
+https://dbh-insights.github.io/helper-app/DBH Insights Helper_0.3.0_aarch64.dmg
+https://dbh-insights.github.io/helper-app/DBH Insights Helper_0.3.0_x64-setup.exe
+```
+
+That folder lives in the `dbh-insights.github.io` repository only — it isn't part of `collect/`, because installers don't belong in the source repository. The links are relative, so they work on the published site but not in a local preview, where they 404.
+
+To publish a new helper build:
+
+1. Build it (see [Build installers](#build-installers)) and copy the file into `helper-app/` in the website repository.
+2. Update `collect/js/downloads.js` with the new `version`, `file` name and `size`, and publish the site.
+
+`downloads.js` holds one entry per platform. A platform with `file: null` shows "No build yet" instead of a dead link, which is what Linux shows today.
 
 ## Website code
 
 ```
 collect/
-├── index.html      the page (stays at the top: it's what the site's URL loads)
-├── css/            styles
-└── js/             scripts, loaded in order by index.html
+├── index.html      landing page (stays at the top: it's what the site's URL loads)
+├── app/
+│   └── index.html  the app
+├── css/            theme.css (shared colours), styles.css (app), landing.css
+├── js/             scripts, loaded in order by each page
+└── img/            screenshots and the helper icon used by the landing page
 ```
 
-Links between them are relative (`js/app.js`, not `/js/app.js`), so the folder works at a site's root or one level down. The scripts share functions as globals, so their order in `index.html` matters: `app.js` loads last.
+Links are relative (`js/app.js`, `../js/app.js`, never `/js/app.js`) and name `index.html` explicitly, so the site works at a domain's root, one level down, or opened straight from disk. The app's scripts share functions as globals, so their order in `app/index.html` matters: `release-notes.js` and then `app.js` load last.
 
 | File | Purpose |
 |---|---|
-| `index.html` | Page markup: sidebar, toolbar, and one section per kind of view |
-| `css/styles.css` | Dark theme, tables, dashboard cards, topology frame, impact picker |
+| `index.html` | Landing page: hero, features, screenshot tour, how it works, security, release notes |
+| `app/index.html` | App markup: sidebar, toolbar, and one section per kind of view |
+| `css/theme.css` | The colour tokens and reset shared by both pages (VMware Clarity dark palette) |
+| `css/styles.css` | App layout: sidebar, tables, dashboard cards, topology frame, impact picker |
+| `css/landing.css` | Landing page layout, responsive down to phone width |
+| `js/release-notes.js` | `RELEASE_NOTES`, newest first. The landing page renders it and the app takes its version from it |
+| `js/downloads.js` | `DOWNLOADS`: the helper installers the landing page offers, per platform |
+| `js/landing.js` | Renders the release notes and download cards, and runs the screenshot tour |
 | `js/helper-client.js` | Calls the helper: `status()`, `call()` for REST, `soap()` for SOAP, `forVcenter(id)` to bind both to one vCenter |
 | `js/vim.js` | vim25 querying: `retrieve()` over a ContainerView (following continuation tokens), `retrieveObject()` for a known managed object, `serviceContent()`, `perfCounterIds()` and `queryPerf()` |
 | `js/sheets.js` | `VcenterData` (cached per-vCenter queries) and the `SHEETS` definitions |
@@ -201,6 +242,28 @@ Links between them are relative (`js/app.js`, not `/js/app.js`), so the folder w
 | `js/report.js` | Topology report HTML |
 | `js/insights-report.js` | Insights dashboard as a standalone HTML file |
 | `js/app.js` | UI: navigation, tables and paging, dashboard, impact picker and panels, export, explorer |
+
+## Release notes
+
+Releases are recorded once, in `collect/js/release-notes.js`. To publish one, add an entry at the **top** of `RELEASE_NOTES`:
+
+```js
+{
+  version: "0.5.0",
+  date: "2026-10-01",          // YYYY-MM-DD
+  helper: "0.3.0",             // the helper version this release needs
+  title: "One line that sums the release up",
+  changes: [
+    { type: "new", text: "What was added. Wrap paths and code in `backticks`." },
+    { type: "improved", text: "…" },
+    { type: "fixed", text: "…" },      // also: "security", "docs"
+  ],
+},
+```
+
+The landing page shows the newest entry in its **New** badge, opens it in the release notes, and prints its version in the footer. The app reads the same entry for its version number, which appears in the vMetaData sheet and in downloaded reports — so there is no second version number to keep in step. Each release can be linked directly: `https://dbh-insights.github.io/#v0.4.0` opens that entry.
+
+The helper's own version is separate; it lives in `helper/package.json`, `helper/src-tauri/Cargo.toml` and `helper/src-tauri/tauri.conf.json`.
 
 ## Adding a sheet
 
@@ -217,6 +280,8 @@ Add an entry to `SHEETS` in `collect/js/sheets.js`:
   },
 }
 ```
+
+Numeric columns total by summing unless told otherwise: `col.number("CPU Usage (%)", AVG)` averages, `col.number("MTU", NONE)` leaves the total blank (use it for IDs, speeds, shares and limits), and `col.number("Free %", totalRatio("Free GiB", "Capacity GiB", 100))` computes the total from two other columns' sums. Text and yes/no columns, and numbers marked `NONE`, can be grouped by.
 
 `group` decides which sidebar heading the sheet appears under; the order of the headings is `GROUP_ORDER` in `collect/js/app.js`, and a group that isn't listed there appears after the known ones rather than vanishing.
 

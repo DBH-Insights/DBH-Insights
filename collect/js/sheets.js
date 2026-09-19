@@ -6,9 +6,17 @@
 
 const col = {
   text: (label) => ({ label, kind: "text" }),
-  number: (label) => ({ label, kind: "number" }),
+  // `total` says how the totals row and group-by summaries combine the column:
+  //   "sum" (the default), "avg", "none" (settings, IDs and speeds that mean nothing added up),
+  //   or { ratio: [numeratorLabel, denominatorLabel], scale } — a ratio of two columns' sums,
+  //   so a total Free % is total free ÷ total capacity, not an average of percentages.
+  number: (label, total = "sum") => ({ label, kind: "number", total }),
   bool: (label) => ({ label, kind: "bool" }),
 };
+
+const AVG = "avg";
+const NONE = "none";
+const totalRatio = (numerator, denominator, scale = 1) => ({ ratio: [numerator, denominator], scale });
 
 /** The source-vCenter column appended to every sheet. */
 const VI_SDK_SERVER = "VI SDK Server";
@@ -451,10 +459,10 @@ const SHEETS = [
       col.bool("Template"),
       col.text("DNS Name"),
       col.number("CPUs"),
-      col.number("Cores p/s"),
+      col.number("Cores p/s", NONE),
       col.number("Memory"),
-      col.number("CPU Usage (%)"),
-      col.number("Memory Usage (%)"),
+      col.number("CPU Usage (%)", AVG),
+      col.number("Memory Usage (%)", AVG),
       col.number("Provisioned GiB"),
       col.number("In Use GiB"),
       col.text("Primary IP Address"),
@@ -523,14 +531,14 @@ const SHEETS = [
       col.bool("Template"),
       col.number("CPUs"),
       col.number("Sockets"),
-      col.number("Cores p/s"),
+      col.number("Cores p/s", NONE),
       col.number("Overall MHz"),
-      col.number("Max MHz"),
-      col.number("CPU Usage (%)"),
+      col.number("Max MHz", NONE),
+      col.number("CPU Usage (%)", AVG),
       col.text("Level"),
-      col.number("Shares"),
+      col.number("Shares", NONE),
       col.number("Reservation"),
-      col.number("Limit"),
+      col.number("Limit", NONE),
       col.number("Entitlement"),
       col.number("DRS Entitlement"),
       col.bool("Hot Add"),
@@ -585,7 +593,7 @@ const SHEETS = [
       col.number("Size MiB"),
       col.number("Consumed MiB"),
       col.number("Active MiB"),
-      col.number("Memory Usage (%)"),
+      col.number("Memory Usage (%)", AVG),
       col.number("Private MiB"),
       col.number("Shared MiB"),
       col.number("Swapped MiB"),
@@ -595,9 +603,9 @@ const SHEETS = [
       col.number("Entitlement"),
       col.number("DRS Entitlement"),
       col.text("Level"),
-      col.number("Shares"),
+      col.number("Shares", NONE),
       col.number("Reservation"),
-      col.number("Limit"),
+      col.number("Limit", NONE),
       col.bool("Hot Add"),
       col.text("Host"),
       col.text("Annotation"),
@@ -645,7 +653,7 @@ const SHEETS = [
       col.text("Powerstate"),
       col.bool("Template"),
       col.text("Disk"),
-      col.number("Disk Key"),
+      col.number("Disk Key", NONE),
       col.text("Disk UUID"),
       col.text("Disk Path"),
       col.number("Capacity MiB"),
@@ -657,11 +665,11 @@ const SHEETS = [
       col.bool("Split"),
       col.bool("Write Through"),
       col.text("Level"),
-      col.number("Shares"),
+      col.number("Shares", NONE),
       col.number("Reservation"),
-      col.number("Limit"),
+      col.number("Limit", NONE),
       col.text("Controller"),
-      col.number("Unit #"),
+      col.number("Unit #", NONE),
       col.text("Raw LUN ID"),
       col.text("Raw Comp. Mode"),
       col.text("Host"),
@@ -723,7 +731,7 @@ const SHEETS = [
       col.number("Capacity MiB"),
       col.number("Consumed MiB"),
       col.number("Free MiB"),
-      col.number("Free %"),
+      col.number("Free %", totalRatio("Free MiB", "Capacity MiB", 100)),
       col.text("Host"),
       col.text("Annotation"),
     ],
@@ -1023,26 +1031,26 @@ const SHEETS = [
       col.text("Connection state"),
       col.text("Power state"),
       col.text("CPU Model"),
-      col.number("Speed"),
+      col.number("Speed", NONE),
       col.bool("HT Available"),
       col.bool("HT Active"),
       col.number("# CPU"),
-      col.number("Cores per CPU"),
+      col.number("Cores per CPU", NONE),
       col.number("# Cores"),
       col.number("# CPU Threads"),
-      col.number("CPU usage %"),
+      col.number("CPU usage %", AVG),
       col.number("# Memory GiB"),
       col.text("Memory Tiering Type"),
       col.number("DRAM GiB"),
       col.number("NVMe Tier GiB"),
-      col.number("Memory usage %"),
+      col.number("Memory usage %", AVG),
       col.number("# NICs"),
       col.number("# HBAs"),
       col.number("# VMs total"),
       col.number("# VMs"),
-      col.number("VMs per Core"),
+      col.number("VMs per Core", totalRatio("# VMs total", "# Cores")),
       col.number("# vCPUs"),
-      col.number("vCPUs per Core"),
+      col.number("vCPUs per Core", totalRatio("# vCPUs", "# Cores")),
       col.number("vRAM GiB"),
       col.bool("VMotion support"),
       col.bool("Storage VMotion support"),
@@ -1058,7 +1066,7 @@ const SHEETS = [
       col.text("NTP Server(s)"),
       col.bool("NTPD running"),
       col.text("Time Zone"),
-      col.number("GMT Offset"),
+      col.number("GMT Offset", NONE),
       col.text("Vendor"),
       col.text("Model"),
       col.text("Serial number"),
@@ -1154,7 +1162,7 @@ const SHEETS = [
       col.bool("DRS enabled"),
       col.number("# VMs"),
       col.number("# vCPUs"),
-      col.number("vCPUs per Core"),
+      col.number("vCPUs per Core", totalRatio("# vCPUs", "NumCpuCores")),
     ],
     async rows(d) {
       const [clusters, hosts, totals, rest] = await Promise.all([
@@ -1198,15 +1206,15 @@ const SHEETS = [
       col.text("Cluster"),
       col.text("Status"),
       col.number("# VMs"),
-      col.number("CPU limit MHz"),
+      col.number("CPU limit MHz", NONE),
       col.number("CPU reservation MHz"),
       col.text("CPU level"),
-      col.number("CPU shares"),
+      col.number("CPU shares", NONE),
       col.number("CPU usage MHz"),
-      col.number("Memory limit MiB"),
+      col.number("Memory limit MiB", NONE),
       col.number("Memory reservation MiB"),
       col.text("Memory level"),
-      col.number("Memory shares"),
+      col.number("Memory shares", NONE),
       col.number("Memory consumed MiB"),
       col.number("Memory active MiB"),
     ],
@@ -1245,12 +1253,12 @@ const SHEETS = [
       col.text("Name"),
       col.text("Type"),
       col.bool("Accessible"),
-      col.number("# VMs"),
+      col.number("# VMs", NONE),
       col.number("Capacity GiB"),
       col.number("In Use GiB"),
       col.number("Free GiB"),
-      col.number("Free %"),
-      col.number("# Hosts"),
+      col.number("Free %", totalRatio("Free GiB", "Capacity GiB", 100)),
+      col.number("# Hosts", NONE),
       col.text("Hosts"),
     ],
     async rows(d) {
@@ -1382,7 +1390,7 @@ const SHEETS = [
       col.text("Driver version"),
       col.text("Firmware"),
       col.text("PCI"),
-      col.number("Speed Mb"),
+      col.number("Speed Mb", NONE),
       col.bool("Duplex"),
       col.text("MAC Address"),
       col.bool("Wake on LAN"),
@@ -1419,7 +1427,7 @@ const SHEETS = [
       col.text("Switch"),
       col.number("# Ports"),
       col.number("Free Ports"),
-      col.number("MTU"),
+      col.number("MTU", NONE),
       col.bool("Promiscuous Mode"),
       col.bool("Mac Changes"),
       col.bool("Forged Transmits"),
@@ -1456,7 +1464,7 @@ const SHEETS = [
       col.text("Host"),
       col.text("Port Group"),
       col.text("Switch"),
-      col.number("VLAN"),
+      col.number("VLAN", NONE),
       col.bool("Promiscuous Mode"),
       col.bool("Mac Changes"),
       col.bool("Forged Transmits"),
@@ -1495,7 +1503,7 @@ const SHEETS = [
       col.text("IP Address"),
       col.text("Subnet mask"),
       col.text("Gateway"),
-      col.number("MTU"),
+      col.number("MTU", NONE),
       col.bool("TSO"),
       col.text("Stack"),
     ],
@@ -1536,7 +1544,7 @@ const SHEETS = [
       col.text("Version"),
       col.number("# Ports"),
       col.number("Max Ports"),
-      col.number("# Hosts"),
+      col.number("# Hosts", NONE),
       col.text("Created"),
       col.text("UUID"),
     ],
@@ -1596,9 +1604,9 @@ const SHEETS = [
     group: "Performance",
     columns: [
       col.text("Host"),
-      col.number("CPU Usage (%)"),
+      col.number("CPU Usage (%)", AVG),
       col.number("CPU Usage MHz"),
-      col.number("Memory Usage (%)"),
+      col.number("Memory Usage (%)", AVG),
       col.number("Memory Consumed GiB"),
       col.number("Network KBps"),
       col.number("Disk KBps"),
@@ -1634,9 +1642,9 @@ const SHEETS = [
     columns: [
       col.text("VM"),
       col.text("Powerstate"),
-      col.number("CPU Usage (%)"),
+      col.number("CPU Usage (%)", AVG),
       col.number("CPU Usage MHz"),
-      col.number("Memory Usage (%)"),
+      col.number("Memory Usage (%)", AVG),
       col.number("Memory Active MiB"),
       col.number("Memory Consumed MiB"),
       col.number("Network KBps"),
@@ -1713,9 +1721,9 @@ const SHEETS = [
       col.text("Key"),
       col.text("Edition"),
       col.text("Cost unit"),
-      col.number("Total"),
-      col.number("Used"),
-      col.number("Available"),
+      col.number("Total", NONE),
+      col.number("Used", NONE),
+      col.number("Available", NONE),
       col.text("Expires"),
     ],
     async rows(d) {
@@ -1765,6 +1773,129 @@ const SHEETS = [
     },
   },
 
+
+  // Capacity per cluster: what the hosts provide against what the VMs are assigned.
+  // Listed under Overview beside Insights; exported after the inventory sheets.
+  {
+    name: "Cluster Capacity",
+    group: "Overview",
+    columns: [
+      col.text("Cluster"),
+      col.bool("HA enabled"),
+      col.bool("DRS enabled"),
+      col.number("# Hosts"),
+      col.number("# Hosts available"),
+      col.number("# Cores"),
+      col.number("DRAM GiB"),
+      col.number("# VMs"),
+      col.number("# Powered on"),
+      col.number("# Powered off"),
+      col.number("# Templates"),
+      col.number("# vCPUs"),
+      col.number("Running vCPUs"),
+      col.number("vCPUs per Core", totalRatio("# vCPUs", "# Cores")),
+      col.number("Running vCPUs per Core", totalRatio("Running vCPUs", "# Cores")),
+      col.number("vRAM GiB"),
+      col.number("Running vRAM GiB"),
+      col.number("Running vRAM % of DRAM", totalRatio("Running vRAM GiB", "DRAM GiB", 100)),
+      col.bool("N+1 memory (est.)"),
+      col.number("VM Provisioned GiB"),
+      col.number("VM In Use GiB"),
+      // Datastores are often shared between clusters, so adding them up would count them twice.
+      col.number("# Datastores", NONE),
+      col.number("Datastore Capacity GiB", NONE),
+      col.number("Datastore Free GiB", NONE),
+      col.number("Datastore Free %", NONE),
+    ],
+    async rows(d) {
+      const [clusters, hosts, vms, datastores, rest] = await Promise.all([
+        d.clusters(),
+        d.hosts(),
+        d.vmInventory(),
+        d.datastores(),
+        d.restClusters().catch(() => null),
+      ]);
+      const restById = new Map((rest ?? []).map((c) => [c.cluster, c]));
+      const hostByMoref = new Map(hosts.map((h) => [h.moref, h]));
+
+      // Each group is a cluster, plus one for hosts that belong to none.
+      const groups = clusters.map((c) => {
+        const name = c.str("name");
+        if (!name) throw new Error(`ClusterComputeResource ${c.moref} returned no name`);
+        const info = restById.get(c.moref);
+        return {
+          name,
+          ha: info ? Boolean(info.ha_enabled) : null,
+          drs: info ? Boolean(info.drs_enabled) : null,
+          hosts: c.array("host").map((m) => hostByMoref.get(m.textContent)).filter(Boolean),
+        };
+      });
+      const clustered = new Set(groups.flatMap((g) => g.hosts.map((h) => h.moref)));
+      const standalone = hosts.filter((h) => !clustered.has(h.moref));
+      if (standalone.length) groups.push({ name: "(standalone hosts)", ha: null, drs: null, hosts: standalone });
+
+      const dramGiB = (h) => bytesToGiB(memoryTierBytes(h, "DRAM") ?? h.num("summary.hardware.memorySize")) ?? 0;
+
+      return groups.map((g) => {
+        const morefs = new Set(g.hosts.map((h) => h.moref));
+        const available = g.hosts.filter((h) => h.str("runtime.connectionState") === "connected" && !h.bool("runtime.inMaintenanceMode"));
+        const cores = g.hosts.reduce((n, h) => n + (h.num("summary.hardware.numCpuCores") ?? 0), 0);
+        const dram = round2(g.hosts.reduce((n, h) => n + dramGiB(h), 0));
+
+        // vCLS VMs are left out, as on every other sheet.
+        const mine = vms.filter((vm) => {
+          const name = vm.str("name");
+          return name && !isVcls(name) && morefs.has(vm.str("runtime.host"));
+        });
+        const templates = mine.filter((vm) => vm.bool("config.template"));
+        const real = mine.filter((vm) => !vm.bool("config.template"));
+        const running = real.filter((vm) => vm.str("runtime.powerState") === "poweredOn");
+        const vcpus = (list) => list.reduce((n, vm) => n + (vm.num("config.hardware.numCPU") ?? 0), 0);
+        const vramGiB = (list) => round2(list.reduce((n, vm) => n + (vm.num("config.hardware.memoryMB") ?? 0), 0) / 1024);
+        const runningVram = vramGiB(running);
+
+        // N+1: could the available hosts, minus the biggest of them, hold the running VMs' assigned memory?
+        const availableDram = available.map(dramGiB);
+        const survivors = availableDram.reduce((n, v) => n + v, 0) - Math.max(0, ...availableDram);
+        const nPlusOne = available.length >= 2 ? survivors >= runningVram : false;
+
+        const committed = real.reduce((n, vm) => n + (vm.num("summary.storage.committed") ?? 0), 0);
+        const uncommitted = real.reduce((n, vm) => n + (vm.num("summary.storage.uncommitted") ?? 0), 0);
+
+        const mounted = datastores.filter((ds) => ds.array("host").some((m) => morefs.has(textAt(m, "key"))));
+        const dsCapacity = bytesToGiB(mounted.reduce((n, ds) => n + (ds.num("summary.capacity") ?? 0), 0));
+        const dsFree = bytesToGiB(mounted.reduce((n, ds) => n + (ds.num("summary.freeSpace") ?? 0), 0));
+
+        return [
+          g.name,
+          g.ha,
+          g.drs,
+          g.hosts.length,
+          available.length,
+          cores,
+          dram,
+          real.length,
+          running.length,
+          real.length - running.length,
+          templates.length,
+          vcpus(real),
+          vcpus(running),
+          ratio(vcpus(real), cores),
+          ratio(vcpus(running), cores),
+          vramGiB(real),
+          runningVram,
+          percent(runningVram, dram),
+          nPlusOne,
+          bytesToGiB(committed + uncommitted),
+          bytesToGiB(committed),
+          mounted.length,
+          dsCapacity,
+          dsFree,
+          percent(dsFree, dsCapacity),
+        ];
+      });
+    },
+  },
 ];
 
 /**

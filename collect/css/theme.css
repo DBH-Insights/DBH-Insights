@@ -1,0 +1,37 @@
+/* DBH Insights colour scheme, shared by the landing page and the app.
+ *
+ * Follows VMware's Clarity dark palette: near-black blue-grey surfaces, #49AFD9
+ * action blue, and Clarity's status colours. Dark only, by design. */
+
+:root {
+  --app-bg: #1b2a32;
+  --sidebar-bg: #0e171c;
+  --surface: #22343c;
+  --surface-alt: #1e2f37;
+  --row-alt: #1f313a;
+  --row-hover: #2a4049;
+  --header-bg: #17262e;
+
+  --border: #314351;
+  --border-strong: #495a63;
+
+  --text: #eaedf0;
+  --text-dim: #adbbc4;
+  --text-faint: #798d99;
+
+  --accent: #49afd9;
+  --accent-hover: #89cbdf;
+  --accent-dim: #0e4f6e;
+
+  --success: #60b515;
+  --warning: #f5c348;
+  --danger: #f54f47;
+
+  --sidebar-width: 216px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+/* An author `display` beats the user agent's `[hidden] { display: none }`. */
+[hidden] { display: none !important; }

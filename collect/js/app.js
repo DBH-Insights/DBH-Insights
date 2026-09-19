@@ -5,7 +5,8 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "0.3.0";
+// The newest release note is the current version (js/release-notes.js loads first).
+const APP_VERSION = typeof RELEASE_NOTES !== "undefined" ? RELEASE_NOTES[0].version : "dev";
 const INSIGHTS = "Insights";
 const TOPOLOGY = "Topology";
 const IMPACT = "Impact";
@@ -289,6 +290,7 @@ function setView(view) {
   $("tableView").hidden = !isSheet;
   $("explorerView").hidden = view !== EXPLORER;
   $("filter").hidden = !isSheet;
+  $("groupBy").hidden = !isSheet;
   // Insights and Topology can each be saved as a standalone HTML file.
   $("downloadHtml").hidden = view !== INSIGHTS && view !== TOPOLOGY;
   $("refresh").hidden = view === EXPLORER;
@@ -311,10 +313,119 @@ function filteredRows() {
   return state.table.rows.filter((row) => row.some((v) => cellText(v).toLowerCase().includes(needle)));
 }
 
-function sortedRows(rows) {
+// ---------- totals and grouping ----------
+
+const isBlank = (v) => v === null || v === undefined || v === "";
+
+/**
+ * One total per column, following each column's `total` rule (see col.number in sheets.js):
+ * sums, averages, ratios of two columns' sums, and a count of True for yes/no columns.
+ * Returns { value, mode } or null where a total would mean nothing.
+ */
+function computeTotals(columns, rows) {
+  const sums = columns.map(() => 0);
+  const counts = columns.map(() => 0);
+  for (const row of rows) {
+    columns.forEach((column, i) => {
+      const v = row[i];
+      if (column.kind === "number" && typeof v === "number" && Number.isFinite(v)) {
+        sums[i] += v;
+        counts[i] += 1;
+      } else if (column.kind === "bool" && v === true) {
+        counts[i] += 1;
+      }
+    });
+  }
+  const indexOf = new Map(columns.map((c, i) => [c.label, i]));
+  return columns.map((column, i) => {
+    if (column.kind === "bool") return { value: counts[i], mode: "true" };
+    if (column.kind !== "number") return null;
+    const rule = column.total ?? "sum";
+    if (rule === "none") return null;
+    if (rule === "avg") return counts[i] ? { value: sums[i] / counts[i], mode: "avg" } : null;
+    if (rule.ratio) {
+      const [top, bottom] = rule.ratio.map((label) => indexOf.get(label));
+      if (top === undefined || bottom === undefined || !sums[bottom]) return null;
+      return { value: (sums[top] / sums[bottom]) * (rule.scale ?? 1), mode: "ratio" };
+    }
+    // Blank rather than 0 when nothing in the column was reported.
+    return counts[i] ? { value: sums[i], mode: "sum" } : null;
+  });
+}
+
+/** Columns worth grouping by: text, yes/no, and numbers that are labels rather than amounts (VLAN, MTU). */
+function groupableColumns(columns) {
+  return columns
+    .map((column, index) => ({ column, index }))
+    .filter(({ column }) => column.kind !== "number" || column.total === "none");
+}
+
+function groupPrefKey() {
+  return `groupBy:${state.table?.name ?? ""}`;
+}
+
+/** The raw-column index to group by, or null. Stored by label so it survives column changes. */
+function groupIndex() {
+  const label = $("groupBy").value;
+  if (!label || !state.table) return null;
+  const index = state.table.columns.findIndex((c) => c.label === label);
+  return index >= 0 ? index : null;
+}
+
+function fillGroupBy() {
+  const select = $("groupBy");
+  const columns = state.table ? groupableColumns(state.table.columns) : [];
+  select.replaceChildren(new Option("No grouping", ""), ...columns.map(({ column }) => new Option(`Group by ${column.label}`, column.label)));
+  const saved = readPref(groupPrefKey(), "");
+  select.value = columns.some(({ column }) => column.label === saved) ? saved : "";
+  select.disabled = !columns.length;
+}
+
+/**
+ * The table as shown: the sheet itself, or one row per group with a count and each
+ * column's total for that group. Totals always come from the filtered raw rows, so an
+ * average or ratio is exact rather than an average of group averages.
+ */
+function currentView() {
+  const table = state.table;
+  const raw = filteredRows();
+  const totals = computeTotals(table.columns, raw);
+  const g = groupIndex();
+  if (g === null) return { columns: table.columns, rows: raw, totals, grouped: false, rawCount: raw.length };
+
+  const key = table.columns[g];
+  const measures = table.columns
+    .map((column, index) => ({ column, index }))
+    .filter(({ column }) => column.kind === "number" && (column.total ?? "sum") !== "none");
+  const columns = [
+    { label: key.label, kind: key.kind === "number" ? "number" : "text" },
+    { label: "Count", kind: "number", total: "sum" },
+    ...measures.map(({ column }) => (column.total === "avg" ? { ...column, label: `Avg ${column.label}` } : column)),
+  ];
+
+  const groups = new Map();
+  for (const row of raw) {
+    const value = row[g];
+    const name = isBlank(value) ? "(blank)" : key.kind === "bool" ? cellText(value) : value;
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(row);
+  }
+  const rows = [...groups].map(([name, members]) => {
+    const t = computeTotals(table.columns, members);
+    return [name, members.length, ...measures.map(({ index }) => t[index]?.value ?? null)];
+  });
+  const groupedTotals = [
+    null,
+    { value: raw.length, mode: "sum" },
+    ...measures.map(({ index }) => totals[index]),
+  ];
+  return { columns, rows, totals: groupedTotals, grouped: true, rawCount: raw.length };
+}
+
+function sortedRows(rows, columns) {
   const { index, ascending } = state.sort;
-  if (index === null) return rows;
-  const numeric = state.table.columns[index].kind === "number";
+  if (index === null || !columns[index]) return rows;
+  const numeric = columns[index].kind === "number";
   const dir = ascending ? 1 : -1;
   return [...rows].sort((a, b) => {
     const x = a[index];
@@ -332,7 +443,7 @@ function renderHead() {
   const row = $("headRow");
   row.replaceChildren();
   if (!state.table) return;
-  state.table.columns.forEach((column, i) => {
+  currentView().columns.forEach((column, i) => {
     const th = make("th", column.kind === "number" ? "num" : "", column.label);
     th.title = column.label;
     th.setAttribute("aria-sort", state.sort.index === i ? (state.sort.ascending ? "ascending" : "descending") : "none");
@@ -357,10 +468,12 @@ function renderBody() {
   if (!table) {
     $("tableEmpty").hidden = true;
     renderPager(0, 0, 0, 1);
+    renderFoot(null);
     return;
   }
 
-  const rows = sortedRows(filteredRows());
+  const view = currentView();
+  const rows = sortedRows(view.rows, view.columns);
   const size = state.pageSize || Math.max(rows.length, 1);
   const pages = Math.max(1, Math.ceil(rows.length / size));
   state.page = Math.min(Math.max(1, state.page), pages);
@@ -374,7 +487,7 @@ function renderBody() {
       const text = cellText(value);
       const td = make("td", "", text);
       td.title = text;
-      if (table.columns[i].kind === "number") td.classList.add("num");
+      if (view.columns[i].kind === "number") td.classList.add("num");
       if (typeof value === "boolean") td.classList.add(value ? "bool-true" : "bool-false");
       if (text === "") td.classList.add("empty");
       tr.append(td);
@@ -386,10 +499,34 @@ function renderBody() {
   $("tableEmpty").hidden = rows.length > 0;
   $("tableEmpty").textContent = table.rows.length ? "No rows match the filter." : "No rows returned.";
   renderPager(rows.length, start, pageRows.length, pages);
+  renderFoot(view);
 
   const total = table.rows.length;
-  const count = rows.length === total ? `${total.toLocaleString()} rows` : `${rows.length.toLocaleString()} of ${total.toLocaleString()} rows`;
-  setStatus(`${count}${loadedAtText()}`);
+  const count = view.rawCount === total ? `${total.toLocaleString()} rows` : `${view.rawCount.toLocaleString()} of ${total.toLocaleString()} rows`;
+  const groups = view.grouped ? `${rows.length.toLocaleString()} group${rows.length === 1 ? "" : "s"} · ` : "";
+  setStatus(`${groups}${count}${loadedAtText()}`);
+}
+
+/** The totals row: every filtered row, across all pages, not just the page on screen. */
+function renderFoot(view) {
+  const foot = $("footRow");
+  foot.replaceChildren();
+  if (!view || !view.rawCount) return;
+  view.columns.forEach((column, i) => {
+    const total = view.totals[i];
+    let text = "";
+    if (total) {
+      if (total.mode === "true") text = total.value ? `${total.value.toLocaleString()} True` : "";
+      else text = `${total.mode === "avg" && !view.grouped ? "avg " : ""}${cellText(round2(total.value))}`;
+    }
+    const td = make("td", column.kind === "number" || total?.mode === "true" ? "num" : "", text);
+    if (i === 0) {
+      td.className = "foot-label";
+      td.textContent = view.grouped ? "Total" : `Total · ${view.rawCount.toLocaleString()} row${view.rawCount === 1 ? "" : "s"}`;
+    }
+    td.title = i === 0 ? "Totals for every row that matches the filter, on all pages" : total?.mode === "avg" ? "Average" : total?.mode === "ratio" ? "Calculated from the column totals" : "";
+    foot.append(td);
+  });
 }
 
 function renderPager(count, start, shown, pages) {
@@ -859,6 +996,7 @@ async function load() {
       state.loadedAt ??= new Date();
       state.table = table;
       state.sort = { index: null, ascending: true };
+      fillGroupBy();
       state.page = 1;
       state.rowCounts.set(view, table.rows.length);
       renderNav();
@@ -1022,6 +1160,15 @@ async function sendExplorer() {
 $("refresh").addEventListener("click", refresh);
 $("export").addEventListener("click", exportXlsx);
 $("downloadHtml").addEventListener("click", () => (state.view === TOPOLOGY ? downloadTopology() : downloadInsights()));
+
+$("groupBy").addEventListener("change", () => {
+  writePref(groupPrefKey(), $("groupBy").value);
+  // Column positions change with grouping, so an old sort would point at the wrong column.
+  state.sort = { index: null, ascending: true };
+  state.page = 1;
+  renderHead();
+  renderBody();
+});
 
 $("filter").addEventListener("input", () => {
   state.page = 1;

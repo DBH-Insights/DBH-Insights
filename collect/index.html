@@ -3,139 +3,370 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DBH Insights</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <title>DBH Insights · vCenter inventory, capacity and failure impact in your browser</title>
+  <meta name="description" content="DBH Insights reads inventory, capacity, health and performance from your vCenters and turns it into a dashboard, a topology map, failure-impact answers, cluster capacity totals and 27 exportable sheets. Read-only, and your credentials never leave your computer.">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <span class="brand-mark"></span>
-        <span class="brand-text">
-          <strong>DBH Insights</strong>
-          <small>vCenter inventory</small>
-        </span>
-      </div>
-      <nav id="nav" class="nav" aria-label="Views"></nav>
-      <div class="sidebar-footer">
-        <button id="export" class="primary">Export XLSX</button>
-        <button id="helperSettings" class="ghost">Helper connection</button>
-      </div>
-    </aside>
+  <a class="skip" href="#main">Skip to content</a>
 
-    <main class="content">
-      <header class="topbar">
-        <div class="titles">
-          <h1 id="title">Insights</h1>
-          <p id="status" class="status"></p>
+  <header class="topnav">
+    <div class="wrap topnav-inner">
+      <a class="logo" href="index.html" aria-label="DBH Insights home">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span>DBH Insights</span>
+      </a>
+      <nav class="topnav-links" aria-label="Page sections">
+        <a href="#features">Features</a>
+        <a href="#tour">Tour</a>
+        <a href="#how">How it works</a>
+        <a href="#security">Security</a>
+        <a href="#download">Download</a>
+        <a href="#release-notes">Release notes</a>
+      </nav>
+      <a class="btn btn-ghost btn-sm" href="#download">Get the helper</a>
+      <a class="btn btn-primary btn-sm" href="app/index.html">Open app</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <a class="pill" href="#release-notes" id="whatsNew">
+          <span class="pill-tag">New</span>
+          <span id="whatsNewText">See what's new in DBH Insights</span>
+          <span aria-hidden="true">→</span>
+        </a>
+        <h1>Your whole vSphere estate,<br><span class="grad">one browser tab.</span></h1>
+        <p class="lead">
+          DBH Insights reads inventory, capacity, health and performance from one or more vCenters and turns it
+          into a live dashboard, a topology map, failure-impact answers, cluster capacity totals and 27 exportable sheets —
+          without your credentials ever leaving your computer.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="app/index.html">Open DBH Insights</a>
+          <a class="btn btn-ghost" href="#download">Download the helper</a>
         </div>
-        <div class="actions">
-          <span id="connection" class="conn">Looking for helper…</span>
-          <select id="vcenterSelect" aria-label="vCenter" hidden></select>
-          <input id="filter" type="search" placeholder="Filter rows…" autocomplete="off" aria-label="Filter rows">
-          <button id="downloadHtml" class="ghost" hidden>Download HTML</button>
-          <button id="refresh" class="primary">Refresh</button>
+        <p class="hero-note">The app needs the free DBH Insights Helper running on your computer. <a href="#how">Here's why.</a></p>
+      </div>
+
+      <div class="wrap">
+        <figure class="shot shot-hero">
+          <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span>dbh-insights.github.io</span></div>
+          <img src="img/insights.jpg" width="2000" height="979"
+               alt="The Insights dashboard: total hosts, cores, storage, virtual machines, physical memory and vCPU-to-core ratio, with a storage gauge, capacity by datastore type, the fullest datastores and a cluster table">
+        </figure>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats" aria-label="At a glance">
+      <div class="wrap stats-grid">
+        <div class="stat"><strong>27</strong><span>inventory sheets in seven groups</span></div>
+        <div class="stat"><strong>REST + SOAP</strong><span>both vCenter APIs, for the complete picture</span></div>
+        <div class="stat"><strong>Read-only</strong><span>nothing in vCenter is ever changed</span></div>
+        <div class="stat"><strong>Local</strong><span>passwords stay in your OS keychain</span></div>
+      </div>
+    </section>
+
+    <!-- What's new -->
+    <section class="section section-new" id="whats-new">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">New in v0.5.0</p>
+          <h2>Totals and rollups, built in</h2>
+          <p>The numbers you used to work out in Excel after every export — now right on the screen.</p>
+        </header>
+        <div class="new-grid">
+          <article class="new-card">
+            <div class="new-card-top">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5H7l6 7-6 7h10"/></svg>
+              <span class="new-tag">New</span>
+            </div>
+            <h3>Totals on every sheet</h3>
+            <p>A totals row pinned to the bottom of every table. It covers all pages and follows your filter, so filter vInfo to one cluster and the totals follow.</p>
+            <ul class="ticks">
+              <li>Amounts summed: vCPUs, memory, GiB, VM counts</li>
+              <li>Usage percentages averaged</li>
+              <li>Free % and vCPUs per core worked out from the totals</li>
+              <li>Yes/no columns show how many are True</li>
+            </ul>
+          </article>
+          <article class="new-card">
+            <div class="new-card-top">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="6" y="10" width="15" height="4" rx="1"/><rect x="6" y="16" width="15" height="4" rx="1"/><path d="M3 10v8h3M3 14h3"/></svg>
+              <span class="new-tag">New</span>
+            </div>
+            <h3>Group by any column</h3>
+            <p>Turn a sheet into a summary: one row per cluster, host, datastore, power state, guest OS or VLAN, with a count and totals for each group.</p>
+            <ul class="ticks">
+              <li>VMs, vCPUs and storage per cluster</li>
+              <li>How many VMs run each guest OS</li>
+              <li>Sort, filter and page the groups</li>
+              <li>Each sheet remembers its grouping</li>
+            </ul>
+          </article>
+          <article class="new-card">
+            <div class="new-card-top">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 18 4-6"/><path d="M4 21h16"/></svg>
+              <span class="new-tag">New</span>
+            </div>
+            <h3>Cluster Capacity</h3>
+            <p>One row per cluster comparing what the hosts provide with what the VMs are assigned, under Overview and in the Excel export.</p>
+            <ul class="ticks">
+              <li>Hosts, cores and DRAM against VMs, vCPUs and vRAM</li>
+              <li>vCPU-to-core ratio and running vRAM as a % of DRAM</li>
+              <li>VM storage and datastore free space</li>
+              <li>N+1 check: can it lose its biggest host?</li>
+            </ul>
+          </article>
         </div>
-      </header>
+        <p class="new-foot"><a class="btn btn-primary btn-sm" href="app/index.html">Try it in the app</a> <a href="#v0.5.0">Read the release notes</a></p>
+      </div>
+    </section>
 
-      <div id="notice" class="notice" hidden></div>
-      <div id="warnings" class="warnings" hidden></div>
+    <!-- Features -->
+    <section class="section" id="features">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Features</p>
+          <h2>Everything you'd export by hand, already laid out</h2>
+          <p>Point it at your vCenters and get the answers operations, capacity and audit teams keep asking for.</p>
+        </header>
 
-      <div id="dashboard" class="dashboard" hidden></div>
+        <div class="features">
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            <h3>Insights dashboard</h3>
+            <p>Hosts, cores, storage, VMs, physical memory and the vCPU-to-core ratio at a glance, with the fullest datastores and every cluster. Save it as a standalone HTML report.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="6" r="2.5"/><circle cx="5" cy="18" r="2.5"/><rect x="15" y="3.5" width="6" height="5" rx="1.2"/><rect x="15" y="15.5" width="6" height="5" rx="1.2"/><path d="M7.5 6C11 6 11 18 15 18M7.5 18C11 18 11 6 15 6M7.5 6H15"/></svg>
+            <h3>Topology map</h3>
+            <p>Hosts grouped by cluster, their datastores, and a line for every mount. Hover to isolate one path; download the map to share it.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>
+            <h3>Failure impact</h3>
+            <p>"What if this host or datastore fails?" See the VMs that depend on it, whether HA can restart them, whether the cluster has room, and storage only that host can reach.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg>
+            <h3>27 inventory sheets</h3>
+            <p>VMs, CPU, memory, disks, partitions, networks, snapshots, tools, hosts, clusters, resource pools, datastores, switches and licences. Sort, filter, total and group them, plus a capacity summary for every cluster.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg>
+            <h3>Performance</h3>
+            <p>The newest CPU, memory, network and disk sample for every host and every powered-on VM, straight from vCenter's performance counters.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+            <h3>Health checks</h3>
+            <p>Flags hosts with no NTP server or a stopped NTP service, VMs whose folder doesn't match their name, CD-ROMs left connected, and active snapshots.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8l-5-5Z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg>
+            <h3>One-click Excel export</h3>
+            <p>Every sheet in a single XLSX workbook with frozen headers, filters and real dates, built in your browser.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="6" rx="1.2"/><rect x="13" y="4" width="8" height="6" rx="1.2"/><rect x="8" y="14" width="8" height="6" rx="1.2"/><path d="M7 10v2h10v-2M12 12v2"/></svg>
+            <h3>Many vCenters</h3>
+            <p>See every vCenter together or one at a time. If one can't be reached, you get a warning and the rest still load.</p>
+          </article>
+          <article class="feature">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/></svg>
+            <h3>API Explorer</h3>
+            <p>Send any read-only REST or SOAP request to vCenter and read the raw response — handy before building a sheet of your own.</p>
+          </article>
+        </div>
+      </div>
+    </section>
 
-      <section id="topologyView" class="topology-view" hidden>
-        <!-- Scripts are disabled inside the frame; app.js attaches the hover behaviour from outside. -->
-        <iframe id="topologyFrame" title="Host and storage topology" sandbox="allow-same-origin"></iframe>
-      </section>
+    <!-- Tour -->
+    <section class="section section-alt" id="tour">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Tour</p>
+          <h2>See it with real data</h2>
+          <p>Screens from a lab with two vCenters, four ESXi hosts and 31 VMs.</p>
+        </header>
 
-      <section id="impactView" class="impact" hidden>
-        <div class="impact-controls">
-          <label class="impact-pick" for="impactSearch">If this fails…</label>
-          <div class="combo">
-            <input id="impactSearch" type="text" role="combobox" aria-expanded="false" aria-controls="impactList"
-                   aria-autocomplete="list" aria-label="Host or datastore to assess" autocomplete="off" spellcheck="false"
-                   placeholder="Search hosts and datastores…">
-            <ul id="impactList" class="combo-list" role="listbox" aria-label="Hosts and datastores" hidden></ul>
+        <div class="tour">
+          <div class="tour-tabs" role="tablist" aria-label="Screens">
+            <button role="tab" id="tab-insights" aria-controls="panel-tour" aria-selected="true" data-img="img/insights.jpg"
+                    data-alt="The Insights dashboard with headline numbers, storage utilisation and clusters"
+                    data-caption="Insights: headline numbers for every selected vCenter, with storage and cluster detail.">Insights</button>
+            <button role="tab" id="tab-topology" aria-controls="panel-tour" aria-selected="false" tabindex="-1" data-img="img/topology.jpg"
+                    data-alt="The Topology map: hosts grouped by cluster on the left, datastores on the right, joined by a line per mount"
+                    data-caption="Topology: every host-to-datastore mount, grouped by cluster, with tables of datastores and hosts.">Topology</button>
+            <button role="tab" id="tab-impact" aria-controls="panel-tour" aria-selected="false" tabindex="-1" data-img="img/impact.jpg"
+                    data-alt="The Impact tab assessing a host: a red verdict, four summary cards, the VMs on the host and a datastore only it can reach"
+                    data-caption="Impact: if esx9-01 failed, 13 running VMs would stay down — HA is off and one datastore goes with it.">Impact</button>
+            <button role="tab" id="tab-sheets" aria-controls="panel-tour" aria-selected="false" tabindex="-1" data-img="img/vinfo.jpg"
+                    data-alt="The vInfo sheet listing 31 virtual machines with power state, CPUs, memory, usage, IP address and guest OS"
+                    data-caption="Sheets: vInfo lists every VM across both vCenters — sortable, filterable and paged.">Sheets</button>
           </div>
-          <p class="hint">Answers from the inventory already loaded: which VMs sit on it, which hosts reach it, and whether the cluster could take the load.</p>
+          <figure class="shot" id="panel-tour" role="tabpanel" aria-labelledby="tab-insights">
+            <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span>dbh-insights.github.io/app/</span></div>
+            <img id="tourImg" src="img/insights.jpg" width="2000" height="979" loading="lazy"
+                 alt="The Insights dashboard with headline numbers, storage utilisation and clusters">
+            <figcaption id="tourCaption">Insights: headline numbers for every selected vCenter, with storage and cluster detail.</figcaption>
+          </figure>
         </div>
-        <div id="impactResult" class="impact-result"></div>
-      </section>
-
-      <section id="tableView" class="table-view" hidden>
-        <div class="table-wrap">
-          <table>
-            <thead><tr id="headRow"></tr></thead>
-            <tbody id="body"></tbody>
-          </table>
-          <p id="tableEmpty" class="table-empty" hidden></p>
-        </div>
-        <div class="pager">
-          <label class="page-size">Rows per page
-            <select id="pageSize">
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-              <option value="250">250</option>
-              <option value="500">500</option>
-              <option value="0">All</option>
-            </select>
-          </label>
-          <span id="pageRange" class="page-range"></span>
-          <span class="spacer"></span>
-          <button id="pageFirst" class="ghost icon" aria-label="First page" title="First page">«</button>
-          <button id="pagePrev" class="ghost icon" aria-label="Previous page" title="Previous page">‹</button>
-          <span id="pageInfo" class="page-info"></span>
-          <button id="pageNext" class="ghost icon" aria-label="Next page" title="Next page">›</button>
-          <button id="pageLast" class="ghost icon" aria-label="Last page" title="Last page">»</button>
-        </div>
-      </section>
-
-      <section id="explorerView" class="explorer" hidden>
-        <div class="card">
-          <p class="card-title">Send a request through the helper</p>
-          <div class="explorer-row">
-            <select id="explorerVcenter" aria-label="vCenter" hidden></select>
-            <select id="explorerMode" aria-label="API">
-              <option value="GET">REST GET</option>
-              <option value="SOAP">SOAP</option>
-            </select>
-            <input id="explorerPath" value="/api/vcenter/vm" spellcheck="false" aria-label="REST path">
-            <button id="explorerSend" class="primary">Send</button>
-          </div>
-          <textarea id="explorerBody" rows="6" spellcheck="false" aria-label="Request body"></textarea>
-          <p id="explorerHint" class="hint"></p>
-        </div>
-        <pre id="explorerOutput" class="explorer-output"></pre>
-      </section>
-    </main>
-  </div>
-
-  <dialog id="helperDialog">
-    <form method="dialog">
-      <h2>Helper connection</h2>
-      <p class="hint">Where this page finds the DBH Insights Helper running on your computer.</p>
-      <label class="field">Helper URL
-        <input id="helperUrl" type="text" spellcheck="false">
-      </label>
-      <div class="dialog-actions">
-        <span class="spacer"></span>
-        <button value="cancel" class="ghost">Cancel</button>
-        <button value="save" class="primary">Save</button>
       </div>
-    </form>
-  </dialog>
+    </section>
 
-  <script src="js/helper-client.js"></script>
-  <script src="js/vim.js"></script>
-  <script src="js/sheets.js"></script>
-  <script src="js/insights.js"></script>
-  <script src="js/impact.js"></script>
-  <script src="js/xlsx.js"></script>
-  <script src="js/report.js"></script>
-  <script src="js/insights-report.js"></script>
-  <script src="js/app.js"></script>
+    <!-- How it works -->
+    <section class="section" id="how">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2>A website for the views, a tiny helper for the connection</h2>
+          <p>
+            Browsers can't reach a vCenter on your network or trust its self-signed certificate, and you shouldn't hand
+            your vCenter password to a website. So a small helper on your own computer does the talking, and the website never sees your password.
+          </p>
+        </header>
+
+        <div class="flow" aria-label="How requests travel">
+          <div class="flow-node">
+            <span class="flow-kicker">Your browser</span>
+            <strong>DBH Insights website</strong>
+            <span>Dashboards, sheets and exports. Updates reach everyone the moment they're published.</span>
+          </div>
+          <div class="flow-link" aria-hidden="true"><span>127.0.0.1</span></div>
+          <div class="flow-node flow-node-helper">
+            <img src="img/helper-icon.png" width="56" height="56" alt="">
+            <span class="flow-kicker">Your computer</span>
+            <strong>DBH Insights Helper</strong>
+            <span>Holds the vCenter sessions and passes read-only requests through.</span>
+          </div>
+          <div class="flow-link" aria-hidden="true"><span>HTTPS</span></div>
+          <div class="flow-node">
+            <span class="flow-kicker">Your network</span>
+            <strong>vCenter</strong>
+            <span>REST and SOAP APIs, self-signed certificates welcome.</span>
+          </div>
+        </div>
+
+        <div class="how-grid">
+          <ol class="steps">
+            <li>
+              <h3>Install the helper</h3>
+              <p>A small desktop app for macOS, Windows and Linux. It lives in the menu bar or system tray and starts listening on <code>127.0.0.1</code>.</p>
+              <a class="btn btn-ghost btn-sm" href="#download">Download the helper</a>
+            </li>
+            <li>
+              <h3>Add your vCenters</h3>
+              <p>Enter each vCenter's address and account once and click <b>Save &amp; test</b>. Passwords go straight into the operating system's keychain.</p>
+            </li>
+            <li>
+              <h3>Open DBH Insights</h3>
+              <p>The app finds the helper by itself, shows which vCenters are connected, and loads the dashboard.</p>
+              <a class="btn btn-primary btn-sm" href="app/index.html">Open the app</a>
+            </li>
+          </ol>
+          <figure class="helper-shot">
+            <img src="img/helper.jpg" width="700" height="1137" loading="lazy"
+                 alt="The DBH Insights Helper window listing two vCenters with Test, Edit and Delete buttons, the websites allowed to use it, and the local port">
+            <figcaption>The helper: vCenters, allowed websites and port, all in one window.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section class="section section-alt" id="security">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Security</p>
+          <h2>Built to look, never to touch</h2>
+        </header>
+        <div class="security">
+          <div class="sec-item">
+            <h3>Read-only by design</h3>
+            <p>REST requests are GET only and SOAP is limited to a short list of read operations. There's no setting that turns writes on.</p>
+          </div>
+          <div class="sec-item">
+            <h3>Passwords stay home</h3>
+            <p>Credentials live in macOS Keychain, Windows Credential Manager or Linux Secret Service. They're never written to disk or sent to the website.</p>
+          </div>
+          <div class="sec-item">
+            <h3>Local only</h3>
+            <p>The helper listens on <code>127.0.0.1</code> alone and rejects requests addressed to any other host name, which blocks DNS-rebinding tricks.</p>
+          </div>
+          <div class="sec-item">
+            <h3>Only sites you trust</h3>
+            <p>Only websites on the helper's allow list can use it. Everyone else is told the helper exists, and nothing more.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download -->
+    <section class="section" id="download">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Download</p>
+          <h2>Get the DBH Insights Helper</h2>
+          <p>Free, and the only thing you install. Pick your platform, add your vCenters, and the website does the rest.</p>
+        </header>
+        <div class="downloads" id="downloads"></div>
+        <p class="download-foot">
+          <span id="downloadVersion" class="muted"></span>
+          <a href="#release-notes">What's in this release?</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Release notes -->
+    <section class="section" id="release-notes">
+      <div class="wrap wrap-narrow">
+        <header class="section-head">
+          <p class="eyebrow">Release notes</p>
+          <h2>What's changed</h2>
+          <p>New features, improvements and fixes, newest first.</p>
+        </header>
+        <div id="releases" class="releases">
+          <noscript><p class="muted">Turn on JavaScript to see the release notes.</p></noscript>
+        </div>
+      </div>
+    </section>
+
+    <!-- Closing call to action -->
+    <section class="cta">
+      <div class="wrap cta-inner">
+        <h2>Ready to look inside your vCenters?</h2>
+        <p>Start the helper, add a vCenter, and open the app.</p>
+        <a class="btn btn-primary" href="app/index.html">Open DBH Insights</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <a class="logo" href="index.html">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span>DBH Insights</span>
+      </a>
+      <span class="muted" id="footerVersion"></span>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="app/index.html">App</a>
+        <a href="#download">Download</a>
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#release-notes">Release notes</a>
+      </nav>
+      <p class="fine">vSphere and vCenter are trademarks of Broadcom Inc. DBH Insights is an independent project and is not affiliated with Broadcom.</p>
+    </div>
+  </footer>
+
+  <script src="js/release-notes.js"></script>
+  <script src="js/downloads.js"></script>
+  <script src="js/landing.js"></script>
 </body>
 </html>

@@ -1,40 +1,4 @@
-/* DBH Insights dark theme.
- *
- * Follows VMware's Clarity dark palette: near-black blue-grey surfaces, #49AFD9
- * action blue, and Clarity's status colours. Dark only, by design. */
-
-:root {
-  --app-bg: #1b2a32;
-  --sidebar-bg: #0e171c;
-  --surface: #22343c;
-  --surface-alt: #1e2f37;
-  --row-alt: #1f313a;
-  --row-hover: #2a4049;
-  --header-bg: #17262e;
-
-  --border: #314351;
-  --border-strong: #495a63;
-
-  --text: #eaedf0;
-  --text-dim: #adbbc4;
-  --text-faint: #798d99;
-
-  --accent: #49afd9;
-  --accent-hover: #89cbdf;
-  --accent-dim: #0e4f6e;
-
-  --success: #60b515;
-  --warning: #f5c348;
-  --danger: #f54f47;
-
-  --sidebar-width: 216px;
-  color-scheme: dark;
-}
-
-* { box-sizing: border-box; }
-
-/* An author `display` beats the user agent's `[hidden] { display: none }`. */
-[hidden] { display: none !important; }
+/* DBH Insights app layout. Colours and the reset come from theme.css, loaded first. */
 
 html, body { height: 100%; }
 
@@ -60,6 +24,8 @@ body {
 }
 
 .brand {
+  color: inherit;
+  text-decoration: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -77,6 +43,7 @@ body {
 
 .brand-text { display: flex; flex-direction: column; line-height: 1.25; }
 .brand-text strong { font-size: 13px; font-weight: 600; letter-spacing: 0.01em; }
+.brand:hover .brand-mark { filter: brightness(1.15); }
 .brand-text small { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; }
 
 .nav { display: flex; flex-direction: column; overflow-y: auto; flex: 1; padding-bottom: 8px; }
@@ -506,3 +473,20 @@ dialog .hint { color: var(--text-dim); margin: 0 0 14px; font-size: 12px; }
 
 .impact-scroll { max-height: 46vh; overflow-y: auto; }
 .impact-scroll .mini-table thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+
+/* ---- totals row and grouping ---- */
+
+tfoot td {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: var(--header-bg);
+  border-top: 1px solid var(--border-strong);
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+tfoot td.num { text-align: right; }
+tfoot td.foot-label { color: var(--accent); white-space: nowrap; }
+tfoot tr:hover { background: none; }
+#groupBy { max-width: 220px; }
