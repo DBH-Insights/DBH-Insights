@@ -75,6 +75,20 @@
         group.append(list);
         body.append(group);
       }
+      // Screenshots for this release, if it has any.
+      for (const shot of release.images ?? []) {
+        const figure = make("figure", "release-shot");
+        const img = make("img");
+        img.src = shot.src;
+        img.alt = shot.alt ?? "";
+        img.loading = "lazy";
+        if (shot.width) img.width = shot.width;
+        if (shot.height) img.height = shot.height;
+        figure.append(img);
+        if (shot.caption) figure.append(make("figcaption", "", shot.caption));
+        body.append(figure);
+      }
+
       details.append(body);
       box.append(details);
     });

@@ -8,6 +8,9 @@
 //   title    one line that sums the release up
 //   changes  { type, text } where type is new | improved | fixed | security | docs.
 //            Wrap code and paths in `backticks`; they render as code.
+//   images   optional screenshots, shown under the changes:
+//            { src, alt, caption, width, height } with src relative to the page (img/…).
+//            Give width and height so the page doesn't jump while they load.
 
 const RELEASE_NOTES = [
   {
@@ -21,6 +24,22 @@ const RELEASE_NOTES = [
       { type: "new", text: "Cluster Capacity, under Overview: one row per cluster with hosts, cores and DRAM against VM counts, vCPUs, vRAM and storage, the vCPU-to-core ratio, running vRAM as a share of DRAM, and whether the cluster could lose its largest host and still hold its running VMs' memory." },
       { type: "improved", text: "Yes/no columns show how many are True in the totals row, such as how many clusters have HA enabled." },
       { type: "improved", text: "Export XLSX includes the Cluster Capacity sheet." },
+    ],
+    images: [
+      {
+        src: "img/release-0.5.0-group-by.jpg",
+        width: 2000,
+        height: 1194,
+        alt: "The vInfo sheet grouped by host: four rows, one per ESXi host, with a count of VMs, CPUs, memory, average CPU and memory usage, provisioned and in-use storage, and a totals row underneath",
+        caption: "Group by Host on vInfo: one row per host, with a totals row for all 31 VMs across both vCenters.",
+      },
+      {
+        src: "img/release-0.5.0-cluster-capacity.jpg",
+        width: 2000,
+        height: 1194,
+        alt: "The Cluster Capacity sheet listing three clusters with HA and DRS state, hosts, cores, DRAM, VM counts, vCPUs and the vCPU-to-core ratio, with a totals row",
+        caption: "Cluster Capacity: hosts, cores and DRAM against VMs, vCPUs and vRAM, for every cluster at once.",
+      },
     ],
   },
   {

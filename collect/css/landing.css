@@ -554,6 +554,22 @@ h1, h2, h3 { line-height: 1.15; margin: 0; letter-spacing: -0.01em; }
 .change-group li { color: var(--text-dim); font-size: 15px; }
 .change-group li::marker { color: var(--border-strong); }
 
+.release-shot {
+  margin: 20px 0 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--app-bg);
+  overflow: hidden;
+}
+.release-shot img { width: 100%; }
+.release-shot figcaption {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text-dim);
+  font-size: 13.5px;
+}
+
 /* ---- closing CTA ---- */
 
 .cta {
